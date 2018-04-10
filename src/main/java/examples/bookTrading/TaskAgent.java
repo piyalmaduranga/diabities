@@ -41,44 +41,32 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 public class TaskAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 
-	// The title of the book to buy
-	private String targetSpace;
-	private String targetTime;
-	private String targetMaterial;
-	private String targetHuman;
-	private String taskpriority;
+	// The title of the agent
+	private String currentSugarLevel;
+	private String preference;
+	private String targetSugarLevel;
+	
+	private String exercise;
 	// The list of known seller agents
-	private AID[] spaceAgents;
-	private AID[] timeAgents;
-	private AID[] materialAgents;
-	private AID[] humanAgents;
-	private AID[] negotiatorAgents;
+	private AID exerciseAgent;
+	private AID dietAgent;
 
 	// Put agent initializations here
 	protected void setup() {
-		// Print a welcome message
-		System.out.println("Hello! Task-agent " + getAID().getName() + " is ready.");
-
 		// Get the title of the book to buy as a start-up argument
 		Object[] args = getArguments();
 		if (args != null && args.length > 0) {
-			targetSpace = (String) args[0];
-			targetTime = (String) args[1];
-			targetMaterial = (String) args[2];
-			targetHuman = (String) args[3];
-			taskpriority = (String) args[5];
-			System.out.println("Target space size is " + targetSpace);
-			System.out.println("Target time is " + targetTime);
-			System.out.println("Target material is " + targetMaterial);
-			System.out.println("Target human is " + targetHuman);
-			System.out.println("Target priority is " + taskpriority);
-			/////////////////// For Task
+			
+			currentSugarLevel = (String) args[0];
+			preference = (String) args[1];
+			targetSugarLevel = (String) args[2];
+			
 			/////////////////// negotiator////////////////////////////////////
 			DFAgentDescription tdfd = new DFAgentDescription();
 			tdfd.setName(getAID());
 			ServiceDescription std = new ServiceDescription();
 			std.setType("negotiation-allocation");
-			std.setName("JADE-book-trading");
+			std.setName("diabities-check");
 			tdfd.addServices(std);
 			try {
 				DFService.register(this, tdfd);
@@ -92,81 +80,28 @@ public class TaskAgent extends Agent {
 				private static final long serialVersionUID = 1L;
 
 				protected void onTick() {
-					System.out.println("Trying to allocate space for " + targetSpace);
-					System.out.println("Trying to allocate timeslot " + targetTime);
-					System.out.println("Trying to allocate materials " + targetMaterial);
-					System.out.println("Trying to allocate human " + targetHuman);
-					// Update the list of seller agents for space
-					DFAgentDescription template = new DFAgentDescription();
-					ServiceDescription sd = new ServiceDescription();
-					sd.setType("space-allocation");
-					template.addServices(sd);
+					
+					DFAgentDescription templateEx = new DFAgentDescription();
+					ServiceDescription exd = new ServiceDescription();
+					exd.setType("exercise-allocation");
+					templateEx.addServices(exd);
 					try {
-						DFAgentDescription[] result = DFService.search(myAgent, template);
-						System.out.println("Found the following space offers:");
-						spaceAgents = new AID[result.length];
-						for (int i = 0; i < result.length; ++i) {
-							spaceAgents[i] = result[i].getName();
-							System.out.println(spaceAgents[i].getName());
-						}
-					} catch (FIPAException fe) {
-						fe.printStackTrace();
-					}
-					/////////////////// For
-					/////////////////// time////////////////////////////////////
-					DFAgentDescription timeTemplate = new DFAgentDescription();
-					ServiceDescription timeSd = new ServiceDescription();
-					timeSd.setType("time-allocation");
-					timeTemplate.addServices(timeSd);
-					try {
-						DFAgentDescription[] timeResult = DFService.search(myAgent, timeTemplate);
-						System.out.println("Found the following time offers:");
-						timeAgents = new AID[timeResult.length];
-						for (int i = 0; i < timeResult.length; ++i) {
-							timeAgents[i] = timeResult[i].getName();
-							System.out.println(timeAgents[i].getName());
-						}
-					} catch (FIPAException fe) {
-						fe.printStackTrace();
-					}
-
-					/////////////////// For
-					/////////////////// material////////////////////////////////////
-					DFAgentDescription materialTemplate = new DFAgentDescription();
-					ServiceDescription materialSd = new ServiceDescription();
-					materialSd.setType("material-allocation");
-					materialTemplate.addServices(materialSd);
-					try {
-						DFAgentDescription[] materialResult = DFService.search(myAgent, materialTemplate);
-						System.out.println("Found the following material offers:");
-						materialAgents = new AID[materialResult.length];
-						for (int i = 0; i < materialResult.length; ++i) {
-							materialAgents[i] = materialResult[i].getName();
-							System.out.println(materialAgents[i].getName());
-						}
-					} catch (FIPAException fe) {
-						fe.printStackTrace();
-					}
-
-					/////////////////// For
-					/////////////////// human////////////////////////////////////
-					DFAgentDescription humanTemplate = new DFAgentDescription();
-					ServiceDescription humanSd = new ServiceDescription();
-					humanSd.setType("human-allocation");
-					humanTemplate.addServices(humanSd);
-					try {
-						DFAgentDescription[] humanResult = DFService.search(myAgent, humanTemplate);
-						System.out.println("Found the following human offers:");
-						humanAgents = new AID[humanResult.length];
-						for (int i = 0; i < humanResult.length; ++i) {
-							humanAgents[i] = humanResult[i].getName();
-							System.out.println(humanAgents[i].getName());
-						}
+						DFAgentDescription[] resultEx = DFService.search(myAgent, templateEx);
+						exerciseAgent = resultEx[0].getName();
 					} catch (FIPAException fe) {
 						fe.printStackTrace();
 					}
 					
-
+					DFAgentDescription dietTemplate = new DFAgentDescription();
+					ServiceDescription dietSd = new ServiceDescription();
+					dietSd.setType("diet-allocation");
+					dietTemplate.addServices(dietSd);
+					try {
+						DFAgentDescription[] dietResult = DFService.search(myAgent, dietTemplate);
+						dietAgent = dietResult[0].getName();
+					} catch (FIPAException fe) {
+						fe.printStackTrace();
+					}
 					// Perform the request
 					myAgent.addBehaviour(new RequestPerformer());
 				}
@@ -192,147 +127,85 @@ public class TaskAgent extends Agent {
 		private static final long serialVersionUID = 1L;
 
 		private AID bestAgent; // The agent who provides the best offer
-		private AID spaceAgent;
-		private AID timeAgent;
-		private AID materialAgent;
-		private AID humanAgent;
-		private String bestHall; // The best offered price
-		private String bestTime;
-		private String bestMaterial;
-		private String bestHuman;
+		private AID exerciseAgent;
+		private AID dietAgent;
+		private String bestExercise; // The best offered price
+		private String bestDiet;
 		private int repliesCnt = 0; // The counter of replies from seller agents
-		private MessageTemplate spaceMt; // The template to receive replies
-		private MessageTemplate timeMt; // The template to receive replies
-		private MessageTemplate humanMt; // The template to receive replies
-		private MessageTemplate materialMt; // The template to receive replies
-
+		private MessageTemplate exerciseMt; // The template to receive replies
+		private MessageTemplate dietMt; // The template to receive replies
+		
 		private int step = 0;
-		private boolean spacerecieved;
-		private boolean timerecieved;
-		private boolean materialrecieved;
-		private boolean humanrecieved;
+		private boolean exerciserecieved;
+		private boolean dietrecieved;
 
 		public void action() {
 			switch (step) {
 			case 0:
-				// Send the cfp to all sellers
-				ACLMessage spaceCfp = new ACLMessage(ACLMessage.CFP);
-				for (int i = 0; i < spaceAgents.length; ++i) {
-					spaceCfp.addReceiver(spaceAgents[i]);
+				ACLMessage exerciseCfp, dietCfp;
+				
+				if(preference.equals("exercise")){
+					// Send the cfp to all sellers
+					exerciseCfp = new ACLMessage(ACLMessage.CFP);
+					exerciseCfp.addReceiver(exerciseAgent);
+					exerciseCfp.setContent(currentSugarLevel);
+					exerciseCfp.setConversationId("exercise-trade");
+					exerciseCfp.setReplyWith("spacecfp" + System.currentTimeMillis()); // Unique
+																					// value
+					myAgent.send(exerciseCfp);
+	
+				}else if(preference.equals("diet")){
+					
+					dietCfp = new ACLMessage(ACLMessage.CFP);
+					dietCfp.addReceiver(dietAgent);
+					dietCfp.setContent(currentSugarLevel);
+				    dietCfp.setConversationId("diet-trade");
+					dietCfp.setReplyWith("timecfp" + System.currentTimeMillis()); // Unique
+					
+					// Send the cfp to all sellers																// value
+					myAgent.send(dietCfp);
 				}
-				spaceCfp.setContent(targetSpace);
-				spaceCfp.setConversationId("space-trade");
-				spaceCfp.setReplyWith("spacecfp" + System.currentTimeMillis()); // Unique
-																				// value
-				myAgent.send(spaceCfp);
-				// Send the cfp to all sellers
-				ACLMessage timeCfp = new ACLMessage(ACLMessage.CFP);
-				for (int i = 0; i < timeAgents.length; ++i) {
-					timeCfp.addReceiver(timeAgents[i]);
-				}
-				timeCfp.setContent(targetTime);
-				timeCfp.setConversationId("time-trade");
-				timeCfp.setReplyWith("timecfp" + System.currentTimeMillis()); // Unique
-																				// value
-				myAgent.send(timeCfp);
-				// Send the cfp to all sellers
-				ACLMessage materialCfp = new ACLMessage(ACLMessage.CFP);
-				for (int i = 0; i < materialAgents.length; ++i) {
-					materialCfp.addReceiver(materialAgents[i]);
-				}
-				materialCfp.setContent(targetMaterial);
-				materialCfp.setConversationId("material-trade");
-				materialCfp.setReplyWith("materialcfp" + System.currentTimeMillis()); // Unique
-																						// value
-				myAgent.send(materialCfp);
-				// Send the cfp to all sellers
-				ACLMessage humanCfp = new ACLMessage(ACLMessage.CFP);
-				for (int i = 0; i < humanAgents.length; ++i) {
-					humanCfp.addReceiver(humanAgents[i]);
-				}
-				humanCfp.setContent(targetHuman);
-				humanCfp.setConversationId("human-trade");
-				humanCfp.setReplyWith("humancfp" + System.currentTimeMillis()); // Unique
-																				// value
-				myAgent.send(humanCfp);
+								
 				// Prepare the template to get proposals
-				spaceMt = MessageTemplate.and(MessageTemplate.MatchConversationId("space-trade"),
-						MessageTemplate.MatchInReplyTo(spaceCfp.getReplyWith()));
-				timeMt = MessageTemplate.and(MessageTemplate.MatchConversationId("time-trade"),
-						MessageTemplate.MatchInReplyTo(timeCfp.getReplyWith()));
-				materialMt = MessageTemplate.and(MessageTemplate.MatchConversationId("material-trade"),
-						MessageTemplate.MatchInReplyTo(materialCfp.getReplyWith()));
-				humanMt = MessageTemplate.and(MessageTemplate.MatchConversationId("human-trade"),
-						MessageTemplate.MatchInReplyTo(humanCfp.getReplyWith()));
+				exerciseMt = MessageTemplate.and(MessageTemplate.MatchConversationId("exercise-trade"),
+						MessageTemplate.MatchInReplyTo(exerciseCfp.getReplyWith()));
+				dietMt = MessageTemplate.and(MessageTemplate.MatchConversationId("diet-trade"),
+						MessageTemplate.MatchInReplyTo(dietCfp.getReplyWith()));
 				step = 1;
 				break;
+				
 			case 1:
 				// Receive all proposals/refusals from seller agents
-				ACLMessage reply = myAgent.receive(spaceMt);
-				ACLMessage timereply = myAgent.receive(timeMt);
-				ACLMessage materialreply = myAgent.receive(materialMt);
-				ACLMessage humanreply = myAgent.receive(humanMt);
+				ACLMessage exercisereply = myAgent.receive(exerciseMt);
+				ACLMessage dietreply = myAgent.receive(dietMt);
 
-				if (reply != null) {
+				if (exercisereply != null) {
 					// Reply received
-					if (reply.getPerformative() == ACLMessage.PROPOSE) {
+					if (exercisereply.getPerformative() == ACLMessage.PROPOSE) {
 
 						// This is an offer
-						bestAgent = reply.getSender();
+						bestAgent = exercisereply.getSender();
 
-						String spaceHallName = reply.getContent();
-						bestHall = spaceHallName;
-						spaceAgent = bestAgent;
+						String exerciseName = exercisereply.getContent();
+						bestExercise = exerciseName;
+						exerciseAgent = bestAgent;
 					}
 					repliesCnt++;
 				}
-				if (timereply != null) {
+				if (dietreply != null) {
 					// Reply received
-					if (timereply.getPerformative() == ACLMessage.PROPOSE) {
+					if (dietreply.getPerformative() == ACLMessage.PROPOSE) {
 						// This is an offer
-						bestAgent = timereply.getSender();
+						bestAgent = exercisereply.getSender();
 
-						String timeProposal = timereply.getContent();
-						if (timeProposal.equals(targetTime)) {
-							bestTime = timeProposal;
-							timeAgent = bestAgent;
-						}
+						String dietName = exercisereply.getContent();
+						bestDiet = dietName;
+						dietAgent = bestAgent;
 					}
 					repliesCnt++;
 
 				}
-				if (materialreply != null) {
-					// Reply received
-					if (materialreply.getPerformative() == ACLMessage.PROPOSE) {
-						// This is an offer
-						bestAgent = materialreply.getSender();
-						String materialProposal = materialreply.getContent();
-						if (materialProposal.equals(targetMaterial)) {
-							bestMaterial = materialProposal;
-							materialAgent = bestAgent;
-						}
-					}
-					repliesCnt++;
-
-				}
-				if (humanreply != null) {
-					// Reply received
-					if (humanreply.getPerformative() == ACLMessage.PROPOSE) {
-						// This is an offer
-						bestAgent = humanreply.getSender();
-
-						String humanProposal = humanreply.getContent();
-						if (humanProposal.equals(targetHuman)) {
-							bestHuman = humanProposal;
-							humanAgent = bestAgent;
-						}
-					}
-
-					repliesCnt++;
-
-				}
-				if (repliesCnt >= (spaceAgents.length + timeAgents.length + materialAgents.length
-						+ humanAgents.length)) {
+				if (repliesCnt >= 2) {
 
 					// We received all replies
 					step = 2;
@@ -341,71 +214,50 @@ public class TaskAgent extends Agent {
 			case 2:
 				// Send the purchase order to the seller that provided the best
 				// offer
-				ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-				order.addReceiver(spaceAgent);
-				order.setContent(bestHall);
-				order.setConversationId("space-trade");
-				order.setReplyWith("order" + System.currentTimeMillis());
-				myAgent.send(order);
+				ACLMessage exProposal = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+				exProposal.addReceiver(exerciseAgent);
+				exProposal.setContent(bestExercise);
+				exProposal.setConversationId("exercise-trade");
+				exProposal.setReplyWith("exproposal" + System.currentTimeMillis());
+				myAgent.send(exProposal);
 
-				ACLMessage order2 = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-				order2.addReceiver(timeAgent);
-				order2.setContent(bestTime);
-				order2.setConversationId("time-trade");
-				order2.setReplyWith("order2" + System.currentTimeMillis());
-				myAgent.send(order2);
-
-				ACLMessage materialorder = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-				materialorder.addReceiver(materialAgent);
-				materialorder.setContent(bestMaterial);
-				materialorder.setConversationId("material-trade");
-				materialorder.setReplyWith("materialorder" + System.currentTimeMillis());
-				myAgent.send(materialorder);
-
-				ACLMessage humanorder = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-				humanorder.addReceiver(humanAgent);
-				humanorder.setContent(bestHuman);
-				humanorder.setConversationId("human-trade");
-				humanorder.setReplyWith("humanorder" + System.currentTimeMillis());
-				myAgent.send(humanorder);
+				ACLMessage dietProposal = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+				dietProposal.addReceiver(dietAgent);
+				dietProposal.setContent(bestDiet);
+				dietProposal.setConversationId("diet-trade");
+				dietProposal.setReplyWith("dietproposal" + System.currentTimeMillis());
+				myAgent.send(dietProposal);
 
 				// Prepare the template to get the purchase order reply
-				spaceMt = MessageTemplate.and(MessageTemplate.MatchConversationId("space-trade"),
-						MessageTemplate.MatchInReplyTo(order.getReplyWith()));
-				timeMt = MessageTemplate.and(MessageTemplate.MatchConversationId("time-trade"),
-						MessageTemplate.MatchInReplyTo(order2.getReplyWith()));
-				materialMt = MessageTemplate.and(MessageTemplate.MatchConversationId("material-trade"),
-						MessageTemplate.MatchInReplyTo(materialorder.getReplyWith()));
-				humanMt = MessageTemplate.and(MessageTemplate.MatchConversationId("human-trade"),
-						MessageTemplate.MatchInReplyTo(humanorder.getReplyWith()));
+				exerciseMt = MessageTemplate.and(MessageTemplate.MatchConversationId("space-trade"),
+						MessageTemplate.MatchInReplyTo(exProposal.getReplyWith()));
+				dietMt = MessageTemplate.and(MessageTemplate.MatchConversationId("time-trade"),
+						MessageTemplate.MatchInReplyTo(dietProposal.getReplyWith()));
 				step = 3;
+				
 				break;
 			case 3:
 				// Receive the purchase order reply
-				reply = myAgent.receive(spaceMt);
-				timereply = myAgent.receive(timeMt);
-				materialreply = myAgent.receive(materialMt);
-				humanreply = myAgent.receive(humanMt);
-				if (reply != null) {
+				exercisereply = myAgent.receive(exerciseMt);
+				dietreply = myAgent.receive(dietMt);
+				
+				if (exercisereply != null) {
 					// Purchase order reply received
-					if (reply.getPerformative() == ACLMessage.INFORM) {
+					if (exercisereply.getPerformative() == ACLMessage.INFORM) {
 						// Purchase successful. We can terminate
-						spacerecieved = true;
-						System.out.println(
-								targetSpace + " successfully allocated from agent " + reply.getSender().getName());
-						System.out.println("Hall = " + bestHall);
+						exerciserecieved = true;
+						System.out.println("Excerice Hours = " + bestExercise);
+						
 					} else {
 						System.out.println("Attempt failed: requested space already allocated.");
 						
 					}
 				}
-				if (timereply != null) {
-					if (timereply.getPerformative() == ACLMessage.INFORM) {
+				if (dietreply != null) {
+					if (dietreply.getPerformative() == ACLMessage.INFORM) {
 						// Purchase successful. We can terminate
-						timerecieved = true;
-						System.out.println(
-								targetTime + " successfully allocated from agent " + timereply.getSender().getName());
-						System.out.println("Time = " + bestTime);
+						dietrecieved = true;
+						System.out.println("Best Diet = " + bestDiet);
 						//
 					} else {
 						System.out.println("Attempt failed: requested time already allocated.");
@@ -413,34 +265,8 @@ public class TaskAgent extends Agent {
 					}
 
 				}
-				if (materialreply != null) {
-					if (materialreply.getPerformative() == ACLMessage.INFORM) {
-						// Purchase successful. We can terminate
-						materialrecieved = true;
-						System.out.println(targetMaterial + " successfully allocated from agent "
-								+ materialreply.getSender().getName());
-						System.out.println("material = " + bestMaterial);
-						//
-					} else {
-						System.out.println("Attempt failed: requested material already allocated.");
-					}
 
-				}
-				if (humanreply != null) {
-					if (humanreply.getPerformative() == ACLMessage.INFORM) {
-						// Purchase successful. We can terminate
-						humanrecieved = true;
-						System.out.println(
-								targetHuman + " successfully allocated from agent " + humanreply.getSender().getName());
-						System.out.println("human = " + bestHuman);
-						//
-					} else {
-						System.out.println("Attempt failed: requested time already allocated.");
-					}
-
-				}
-
-				if (spacerecieved && timerecieved && humanrecieved && materialrecieved) { // resolved
+				if (dietrecieved && exerciserecieved ) { // resolved
 					step = 4;
 					myAgent.doDelete();
 				}
@@ -449,25 +275,13 @@ public class TaskAgent extends Agent {
 		}
 
 		public boolean done() {
-			if (step == 2 && spaceAgent == null) {
-				System.out.println(
-						"Attempt failed: targetSpace " + targetSpace + " not available (Use data mining to suggest)");
+			if (step == 2 && exerciseAgent == null) {
 				//call task negotiator
 				
 				// Data mining DB logic here
-			} else if (step == 2 && timeAgent == null) {
-				System.out.println(
-						"Attempt failed: targetTime " + targetTime + " not available (Use data mining to suggest)");
+			} else if (step == 2 && dietAgent == null) {
 				myAgent.addBehaviour(new NegotiateRequestsServer());
 			
-			} else if (step == 2 && humanAgent == null) {
-				System.out.println(
-						"Attempt failed: targetHuman " + targetHuman + " not available (Use data mining to suggest)");
-
-			} else if (step == 2 && materialAgent == null) {
-				System.out.println("Attempt failed: targetMaterial " + targetMaterial
-						+ " not available (Use data mining to suggest)");
-
 			}
 			return false;
 			// Add data to db

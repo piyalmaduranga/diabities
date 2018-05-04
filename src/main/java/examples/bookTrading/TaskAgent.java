@@ -74,8 +74,8 @@ public class TaskAgent extends Agent {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			// Add a TickerBehaviour that schedules a request for seller agents
-			// every minute
+			// Checks whether there are newly registered agents in the agent registry
+			// every 10 secs
 			addBehaviour(new TickerBehaviour(this, 10000) {
 				private static final long serialVersionUID = 1L;
 
@@ -143,24 +143,26 @@ public class TaskAgent extends Agent {
 			switch (step) {
 			case 0:
 				ACLMessage exerciseCfp, dietCfp;
+				exerciseCfp = new ACLMessage(ACLMessage.CFP);
+				dietCfp = new ACLMessage(ACLMessage.CFP);
 				
 				if(preference.equals("exercise")){
 					// Send the cfp to all sellers
-					exerciseCfp = new ACLMessage(ACLMessage.CFP);
+					//exerciseCfp = new ACLMessage(ACLMessage.CFP);
 					exerciseCfp.addReceiver(exerciseAgent);
 					exerciseCfp.setContent(currentSugarLevel);
 					exerciseCfp.setConversationId("exercise-trade");
-					exerciseCfp.setReplyWith("spacecfp" + System.currentTimeMillis()); // Unique
+					exerciseCfp.setReplyWith("exerciseCfp" + System.currentTimeMillis()); // Unique
 																					// value
 					myAgent.send(exerciseCfp);
 	
 				}else if(preference.equals("diet")){
 					
-					dietCfp = new ACLMessage(ACLMessage.CFP);
+					//dietCfp = new ACLMessage(ACLMessage.CFP);
 					dietCfp.addReceiver(dietAgent);
 					dietCfp.setContent(currentSugarLevel);
 				    dietCfp.setConversationId("diet-trade");
-					dietCfp.setReplyWith("timecfp" + System.currentTimeMillis()); // Unique
+					dietCfp.setReplyWith("dietcfp" + System.currentTimeMillis()); // Unique
 					
 					// Send the cfp to all sellers																// value
 					myAgent.send(dietCfp);
@@ -229,7 +231,7 @@ public class TaskAgent extends Agent {
 				myAgent.send(dietProposal);
 
 				// Prepare the template to get the purchase order reply
-				exerciseMt = MessageTemplate.and(MessageTemplate.MatchConversationId("space-trade"),
+				exerciseMt = MessageTemplate.and(MessageTemplate.MatchConversationId("exercise-trade"),
 						MessageTemplate.MatchInReplyTo(exProposal.getReplyWith()));
 				dietMt = MessageTemplate.and(MessageTemplate.MatchConversationId("time-trade"),
 						MessageTemplate.MatchInReplyTo(dietProposal.getReplyWith()));
@@ -320,7 +322,7 @@ public class TaskAgent extends Agent {
 
 			// The requested book is available for sale. Reply with the price
 			reply.setPerformative(ACLMessage.PROPOSE);
-			reply.setContent(taskpriority);
+			reply.setContent(preference);
 			for(DFAgentDescription aid:result){
 				if(aid.getName().toString().contains("Negotiator")){
 					System.out.println("Found the following negoatiation offers:");

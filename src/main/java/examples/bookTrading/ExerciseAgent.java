@@ -34,20 +34,28 @@ import jade.lang.acl.MessageTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 import examples.IRAObjects.Space;
 import examples.IRAObjects.Human;
 
-public class HumanAgent extends Agent {
+public class ExerciseAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 
 	// The catalogue of books for sale (maps the title of a book to its price)
 	private ArrayList<Human> catalogue;
+	HashMap<String, Integer> sugarLevelMap = new HashMap<String, Integer>();
+
 	// The GUI by means of which the user can add books in the catalogue
 
 	// Put agent initializations here
 	protected void setup() {
-		// Create the catalogue
+		// Create the catalogueut
+		sugarLevelMap.put("10", 100);
+		sugarLevelMap.put("9", 90);
+		sugarLevelMap.put("8", 90);
+		
+
 		Object[] o = getArguments();
 		catalogue = new ArrayList<Human>();
 		for (Object object : o) {
@@ -64,8 +72,8 @@ public class HumanAgent extends Agent {
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Human-allocation");
-		sd.setName("JADE-book-trading");
+		sd.setType("exercise-allocation");
+		sd.setName("SugarLevel");
 		dfd.addServices(sd);
 		try {
 			DFService.register(this, dfd);
@@ -74,10 +82,10 @@ public class HumanAgent extends Agent {
 		}
 
 		// Add the behaviour serving queries from buyer agents
-		addBehaviour(new HumanOfferRequestsServer());
+		addBehaviour(new HighestPossibleValueServer());
 
 		// Add the behaviour serving purchase orders from buyer agents
-		addBehaviour(new AllocateHumanServer());
+		addBehaviour(new IterationRequestServer());
 	}
 
 	// Put agent clean-up operations here
@@ -100,8 +108,8 @@ public class HumanAgent extends Agent {
 	 * replies with a PROPOSE message specifying the price. Otherwise a REFUSE
 	 * message is sent back.
 	 */
-	private class HumanOfferRequestsServer extends CyclicBehaviour { // Negotiation
-																	// Logic
+	private class HighestPossibleValueServer extends CyclicBehaviour { // Negotiation
+																		// Logic
 		private static final long serialVersionUID = 1L;
 
 		public void action() {
@@ -109,14 +117,14 @@ public class HumanAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				// CFP Message received. Process it
-				String title = msg.getContent();
+				String currentSugarLevel = msg.getContent();
 				ACLMessage reply = msg.createReply();
 
 				// Integer price = (Integer) catalogue.get(title);
 				ArrayList<Human> proposals = new ArrayList<Human>();
 				int index = 0;
 				for (Human c : catalogue) {
-					if (c.getLabel().equals(title)) {
+					if (c.getLabel().equals(currentSugarLevel)) {
 						proposals.add(catalogue.get(index));
 					}
 					index++;
@@ -148,30 +156,33 @@ public class HumanAgent extends Agent {
 	 * from its catalogue and replies with an INFORM message to notify the buyer
 	 * that the purchase has been sucesfully completed.
 	 */
-	private class AllocateHumanServer extends CyclicBehaviour { // Acceptance
-																// Criteria
+	private class IterationRequestServer extends CyclicBehaviour { // Acceptance
+																	// Criteria
 		private static final long serialVersionUID = 1L;
 
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				// ACCEPT_PROPOSAL Message received. Process it
 				String title = msg.getContent();
-				ACLMessage reply = msg.createReply();
-				Human removeObj = null;
-				for (Human c : catalogue) {
-					if (c.getLabel().equals(title)) {
-						removeObj = c;
+				if (title.equals("iteration")) {
+					ACLMessage reply = msg.createReply();
+					Human removeObj = null;
+					for (Human c : catalogue) {
+						if (c.getLabel().equals(title)) {
+							removeObj = c;
 
+						}
 					}
-				}
-				catalogue.remove(removeObj);
-				// Integer price = (Integer) catalogue.remove(title);
-				reply.setPerformative(ACLMessage.INFORM);
-				System.out.println("******************"+title + " allocated to task " + msg.getSender().getName());
+					catalogue.remove(removeObj);
+					// Integer price = (Integer) catalogue.remove(title);
+					reply.setPerformative(ACLMessage.INFORM);
+					System.out
+							.println("******************" + title + " allocated to task " + msg.getSender().getName());
 
-				myAgent.send(reply);
+					myAgent.send(reply);
+				}
 			} else {
 				block();
 			}

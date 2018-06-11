@@ -53,31 +53,19 @@ public class StartMainContainer {
 		
 	}
 	
-	public static AgentController startSpaceAgent(String agentName,Object[] resources) throws StaleProxyException{
+	
+	public static AgentController startSystemAgent(String agentName) throws StaleProxyException{
 		AgentController rma = agentContainer.createNewAgent(agentName,
-				"examples.bookTrading.SpaceAgent", resources); 
+				"examples.bookTrading.SystemAgent", null); 
 		rma.start();
 		return rma;		
 	}
-	public static AgentController startHumanAgent(String agentName,Object[] resources) throws StaleProxyException{
+	
+	public static AgentController startHumanAgent(String agentName, String [] args) throws StaleProxyException{
 		AgentController rma = agentContainer.createNewAgent(agentName,
-				"examples.bookTrading.HumanAgent", resources); 
+				"examples.bookTrading.HumanAgent",args); 
 		rma.start();
 		return rma;				
-	}
-	public static AgentController startTimeAgent(String agentName,Object[] resources) throws StaleProxyException{
-		AgentController rma = agentContainer.createNewAgent(agentName,
-				"examples.bookTrading.TimeAgent", resources); 
-		rma.start();
-		return rma;	
-	
-	}
-	public static AgentController startMaterialAgent(String agentName,Object[] resources) throws StaleProxyException{
-		AgentController rma = agentContainer.createNewAgent(agentName,
-				"examples.bookTrading.MaterialAgent", resources); 
-		rma.start();
-		return rma;	
-	
 	}
 	
 	public static AgentController startTaskAgent(String agentName,Object[] resources) throws StaleProxyException{

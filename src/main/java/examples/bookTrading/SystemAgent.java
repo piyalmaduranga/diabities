@@ -25,6 +25,7 @@ package examples.bookTrading;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -34,27 +35,22 @@ import jade.lang.acl.MessageTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.util.Hashtable;
 
 import examples.IRAObjects.Space;
-import examples.IRAObjects.Material;
 
-public class MaterialAgent extends Agent {
+public class SystemAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 
 	// The catalogue of books for sale (maps the title of a book to its price)
-	private ArrayList<Material> catalogue;
+	private ArrayList<Space> catalogue;
 	// The GUI by means of which the user can add books in the catalogue
 	
 	// Put agent initializations here
 	protected void setup() {
 		// Create the catalogue
 		Object[] o = getArguments();
-		catalogue = new ArrayList<Material>();
-		for(Object object: o){
-			Material Material = (Material)object;
-			catalogue.add(Material);			
-		}
+
 		//fill this catalogue through arguments
 		// Create and show the GUI 
 		/*myGui = new BookSellerGui(this);
@@ -64,8 +60,8 @@ public class MaterialAgent extends Agent {
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Material-allocation");
-		sd.setName("JADE-book-trading");
+		sd.setType("proposal-allocation");
+		sd.setName("MyAgent");
 		dfd.addServices(sd);
 		try {
 			DFService.register(this, dfd);
@@ -75,10 +71,10 @@ public class MaterialAgent extends Agent {
 		}
 
 		// Add the behaviour serving queries from buyer agents
-		addBehaviour(new MaterialOfferRequestsServer());
+		addBehaviour(new OfferRequestsServer());
 
 		// Add the behaviour serving purchase orders from buyer agents
-		addBehaviour(new AllocateMaterialServer());
+		addBehaviour(new AllocateSpaceServer());
 	}
 
 	// Put agent clean-up operations here
@@ -92,7 +88,7 @@ public class MaterialAgent extends Agent {
 		}
 
 		// Printout a dismissal message
-		System.out.println("Material Agent "+getAID().getName()+" terminating.");
+		System.out.println("Space Agent "+getAID().getName()+" terminating.");
 	}
 
 	/**
@@ -103,7 +99,7 @@ public class MaterialAgent extends Agent {
 	   with a PROPOSE message specifying the price. Otherwise a REFUSE message is
 	   sent back.
 	 */
-	private class MaterialOfferRequestsServer extends CyclicBehaviour { //Negotiation Logic
+	private class OfferRequestsServer extends CyclicBehaviour { //Negotiation Logic
 		private static final long serialVersionUID = 1L;
 
 		public void action() {
@@ -111,31 +107,40 @@ public class MaterialAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				// CFP Message received. Process it
-				String title = msg.getContent();
+				String currentSugarLevel = msg.getContent();
 				ACLMessage reply = msg.createReply();
 
-				//Integer price = (Integer) catalogue.get(title);
-				ArrayList<Material> proposals = new ArrayList<Material>();
+				//piyal Proposal Logic Here
+/*				//Integer price = (Integer) catalogue.get(title);
+				ArrayList<Space> proposals = new ArrayList<Space>();
 				int index = 0;
-				for(Material c:catalogue){
-					if(c.getLabel().equals(title)){
+				for(Space c:catalogue){
+					if(c.getSpace() >= Integer.parseInt(title)){
 						proposals.add(catalogue.get(index));
 					}
 					index++;
 				}
-				//Collections.sort(proposals);
+				Collections.sort(proposals);
 				
 				//Bargain Logic here
 				if (proposals.size() != 0) {
 					// The requested book is available for sale. Reply with the price
 					reply.setPerformative(ACLMessage.PROPOSE);
-					reply.setContent(String.valueOf(proposals.get(0).getLabel()));
+					reply.setContent(String.valueOf(proposals.get(0).getHallName()));
 				}
 				else {
 					// The requested book is NOT available for sale.
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
-				}
+				}*/
+				
+/*				piyal Finally add proposal as the content and send using below code
+				reply.setPerformative(ACLMessage.PROPOSE);
+				reply.setContent(String.valueOf(proposals.get(0).getHallName()));
+				myAgent.send(reply);*/
+				reply.setPerformative(ACLMessage.PROPOSE);
+				reply.setContent(String.valueOf("Wede Goda"));
+				System.out.println("testings");
 				myAgent.send(reply);
 			}
 			else {
@@ -152,7 +157,7 @@ public class MaterialAgent extends Agent {
 	   and replies with an INFORM message to notify the buyer that the
 	   purchase has been sucesfully completed.
 	 */
-	private class AllocateMaterialServer extends CyclicBehaviour { // Acceptance Criteria
+	private class AllocateSpaceServer extends CyclicBehaviour { // Acceptance Criteria
 		private static final long serialVersionUID = 1L;
 
 		public void action() {
@@ -162,17 +167,9 @@ public class MaterialAgent extends Agent {
 				// ACCEPT_PROPOSAL Message received. Process it
 				String title = msg.getContent();
 				ACLMessage reply = msg.createReply();
-				Material removeObj = null ;
-				for(Material c:catalogue){
-					if(c.getLabel().equals(title)){
-						removeObj = c;
-						
-					}
-				}
-				catalogue.remove(removeObj);
 				//Integer price = (Integer) catalogue.remove(title);
 					reply.setPerformative(ACLMessage.INFORM);
-					System.out.println("******************"+title+" Material allocated to task "+msg.getSender().getName());
+					System.out.println("******************"+title+" allocated to task "+msg.getSender().getName());
 
 				myAgent.send(reply);
 			}

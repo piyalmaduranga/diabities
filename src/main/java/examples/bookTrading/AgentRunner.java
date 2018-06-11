@@ -2,10 +2,8 @@ package examples.bookTrading;
 
 import java.awt.Container;
 
-import examples.IRAObjects.Human;
-import examples.IRAObjects.Material;
+import examples.IRAObjects.Proposal;
 import examples.IRAObjects.Space;
-import examples.IRAObjects.Time;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
@@ -27,22 +25,13 @@ public class AgentRunner {
 		StartMainContainer mainContainer;
 		try {
 			mainContainer = StartMainContainer.getInstance();
-				//Add all the resources
-			Object [] spaces = new Object[]{new Space("L1H04", 160),new Space("L2H02", 120),new Space("L2H03", 60),new Space("L3H05", 200)};
-			Object [] time = new Object[]{new Time("1"),new Time("2"),new Time("3"),new Time("4")};
-			Object [] material = new Object[]{new Material("whiteboardpen"),new Material("projector"),new Material("dilini"),new Material("desk")};
-			Object [] human = new Object[]{new Human("dilini"),new Human("locha"),new Human("karuna"),new Human("saminda")};
-			
+						
 			//start resource agents
-			mainContainer.startSpaceAgent("Space Agent", spaces);
-			mainContainer.startTimeAgent("Time Agent", time);
-			mainContainer.startHumanAgent("Human Agent", human);
-			mainContainer.startMaterialAgent( "Material Agent", material);
-
-			//Add task agents
-			mainContainer.startTaskAgent( "L01English", new Object[]{new String("90"),new String("3"),new String("projector"),new String("dilini")});
-			mainContainer.startTaskAgent("L03DataMining", new Object[]{new String("156"),new String("4"),new String("whiteboardpen"),new String("karuna")});
-							
+			mainContainer.startHumanAgent("Human Agent", new String[]{"160","Exercise","110"});
+			mainContainer.startSystemAgent( "System Agent1");
+			mainContainer.startSystemAgent( "System Agent2");
+			mainContainer.startSystemAgent( "System Agent3");
+			mainContainer.startSystemAgent( "System Agent4");					
 			
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
@@ -54,22 +43,18 @@ public class AgentRunner {
 		try {
 			
 			//Add all the resources
-			Object [] spaces = new Object[]{new Space("L1H04", 160),new Space("L2H02", 120),new Space("L2H03", 60),new Space("L3H05", 200)};
-			Object [] time = new Object[]{new Time("1"),new Time("2"),new Time("3"),new Time("4")};
-			Object [] material = new Object[]{new Material("whiteboardpen"),new Material("projector"),new Material("dilini"),new Material("desk")};
-			Object [] human = new Object[]{new Human("dilini"),new Human("locha"),new Human("karuna"),new Human("saminda")};
-			
-			//start resource agents
-			mainContainer.startSpaceAgent( "Space Agent", spaces);
-			mainContainer.startTimeAgent("Time Agent", time);
-			mainContainer.startHumanAgent( "Human Agent", human);
-			mainContainer.startMaterialAgent( "Material Agent", material);
+			mainContainer.startHumanAgent("Human Agent", new String[]{"160","Exercise","110"});
+			mainContainer.startSystemAgent( "System Agent1");
+			mainContainer.startSystemAgent( "System Agent2");
+			mainContainer.startSystemAgent( "System Agent3");
+			mainContainer.startSystemAgent( "System Agent4");
+
 			setTaskNegotiator(mainContainer.startTaskNegotiatorAgent("Negotiator", null));
 			
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
-		}
-		return mainContainer;
+		} 
+		return mainContainer;  
 	}
 
 	public static AgentController getTaskNegotiator() {
